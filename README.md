@@ -46,6 +46,7 @@ automotive-downtime-analytics/
 │  └─ 02_eda_kpis.ipynb
 ├─ generate_downtime_events.py
 └─ README.md
+```
 
 01_data_cleaning.ipynb – loads the dataset, converts timestamps to proper datetime types, engineers time-based features (date, month, weekday) and checks data quality.
 
@@ -53,16 +54,17 @@ automotive-downtime-analytics/
 
 ---
 
-## 3. Enviroment and how to run
+## 3. Environment and how to run
 
 Recommended Python version: 3.10+
 
-Install dependencies
+### Install dependencies
 
 From inside the project folder:
 
+```
 python -m pip install pandas matplotlib
-
+```
 
 (Optional but useful: Jupyter / VS Code with the Jupyter extension.)
 
@@ -80,8 +82,9 @@ Regenerate the dataset (optional)
 
 If you want to regenerate the synthetic dataset from scratch:
 
+```
 python generate_downtime_events.py
-
+```
 
 This will create (or overwrite) a downtime_events.csv file in the project folder, which you can then move or keep under Data/.
 
