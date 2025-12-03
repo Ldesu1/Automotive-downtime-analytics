@@ -4,31 +4,32 @@ from datetime import datetime, timedelta
 import random
 from typing import List, Dict, Any
 
-# Para que los números sean reproducibles
+# Set seeds for reproducible results
 np.random.seed(42)
 random.seed(42)
 
-# Número de registros
+# Number of rows (events) to generate
 n_rows: int = 8000
 
-# Rango de fechas simulado
+# Simulated date range
 start_date: datetime = datetime(2024, 1, 1)
 end_date: datetime = datetime(2024, 6, 30)
 date_range_days: int = (end_date - start_date).days
 
-# Líneas de producción
+# Production lines
 lines: List[str] = ["BodyShop", "PaintShop", "FinalAssembly"]
 
+# Stations per line
 stations_per_line: Dict[str, List[str]] = {
     "BodyShop": ["BS_Weld_01", "BS_Weld_02", "BS_Trans_01", "BS_QC_01"],
     "PaintShop": ["PS_Prep_01", "PS_Paint_01", "PS_Oven_01", "PS_QC_01"],
     "FinalAssembly": ["FA_Conv_01", "FA_Station_01", "FA_Station_02", "FA_QC_01"],
 }
 
-# Robots (ficticios)
+# Fake robot IDs
 robots: List[str] = [f"R{str(i).zfill(3)}" for i in range(1, 31)]
 
-# Códigos y categorías de fallo
+# Failure codes and categories
 failure_codes: List[str] = ["E01", "E02", "E03", "E04", "E05", "E06"]
 failure_categories: Dict[str, str] = {
     "E01": "mechanical",
@@ -41,7 +42,7 @@ failure_categories: Dict[str, str] = {
 
 
 def random_timestamp() -> datetime:
-    """Genera una marca de tiempo aleatoria dentro del rango definido."""
+    """Generate a random timestamp within the defined date range."""
     day_offset: int = random.randint(0, date_range_days)
     base_date: datetime = start_date + timedelta(days=day_offset)
     hour: int = random.randint(0, 23)
@@ -50,7 +51,7 @@ def random_timestamp() -> datetime:
 
 
 def get_shift(hour: int) -> str:
-    """Devuelve el turno según la hora."""
+    """Return the shift (morning/afternoon/night) given an hour (0–23)."""
     if 6 <= hour < 14:
         return "morning"
     elif 14 <= hour < 22:
@@ -65,10 +66,9 @@ for i in range(n_rows):
     event_id: int = i + 1
     ts_start: datetime = random_timestamp()
 
-    # Duración simulada con distribución exponencial (muchas cortas, pocas largas)
+    # Simulate duration using an exponential distribution (many short stops, few long ones)
     raw_duration: float = float(np.random.exponential(scale=25))
-
-    # Limitamos entre 1 y 240 minutos
+    # Clamp between 1 and 240 minutes
     duration: float = max(1.0, min(240.0, raw_duration))
 
     ts_end: datetime = ts_start + timedelta(minutes=duration)
@@ -77,22 +77,22 @@ for i in range(n_rows):
     station: str = random.choice(stations_per_line[line])
     robot_id: str = random.choice(robots)
 
-    # Probabilidades distintas por tipo de fallo
+    # Different probabilities per failure code
     f_code: str = random.choices(
         failure_codes,
-        weights=[0.25, 0.20, 0.20, 0.15, 0.15, 0.05]
+        weights=[0.25, 0.20, 0.20, 0.15, 0.15, 0.05],
     )[0]
     f_cat: str = failure_categories[f_code]
 
     shift: str = get_shift(ts_start.hour)
 
-    # Piezas perdidas aproximadas en función de la duración
+    # Approximate number of lost pieces as a function of duration
     raw_pieces: float = float(np.random.normal(loc=duration / 3, scale=2))
     pieces_lost: int = int(max(0.0, raw_pieces))
 
-    # Pequeños sesgos para hacerlo más realista:
-    # - algo más de duración en turno de noche
-    # - algo más en BodyShop
+    # Small biases to make the dataset more realistic:
+    # - slightly longer downtime at night
+    # - slightly longer downtime in BodyShop
     if shift == "night":
         duration *= 1.1
     if line == "BodyShop":
@@ -115,13 +115,14 @@ for i in range(n_rows):
 
     rows.append(row)
 
-# Convertir a DataFrame
+# Build DataFrame from all simulated rows
 df = pd.DataFrame(rows)
 
-# Guardar a CSV en la misma carpeta donde está este script
+# Save to CSV in the current folder
 output_path: str = "downtime_events.csv"
 df.to_csv(output_path, index=False)
 
-print(f"Archivo generado: {output_path}")
+print(f"File generated: {output_path}")
 print(df.head())
+
 
